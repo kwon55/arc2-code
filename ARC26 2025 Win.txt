@@ -1,0 +1,804 @@
+submit 33 1등+myModel kgmon [ARC26] 2025 Win 현실적인 대안.
+44 v3 loo 99rb entropy m 0f94b6 - Version 1 최고 점수.
+
+
+agi3랑 혼재함. 여기선 agi 2만 생각해줘. ARC Prize 2026 - ARC-AGI-2
+
+qwen 3.8에 헬퍼 함수와 서술함수를 추가해서, 완성본을 만들고 싶어. 가장 이상적. 하지만,  서술에서부터 막힘.
+qwen 3.0 ? 1등 함수에, 보조 도구를 넣는것이 현실적인듯.
+qwen  1등 함수에 , 문제를 분류해서 풀이를 했는데 잘  안 됨.
+qwen  1등 함수에 , qwen3.8 대신 qwen 2.5insturct 보조  풀이를 생각하고 있음. 너님의 생각은?
+
+
+################## 정렬
+
+44 v3 loo 99rb entropy m 0f94b6 - Version 1
+Succeeded · 5mo ago
+31.81
+
+kgmon [ARC26] 2025 Winning S - Version 3
+Succeeded · 4mo ago
+31.81
+
+2 step kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 2mo ago
+31.53
+
+22 submit option not success in AIMO - Version 4
+Succeeded · 3mo ago · CONS_EPS = 3
+31.39
+
+5 myModel kgmon [ARC26] 2025 Winning S - Version 3
+Succeeded · 2mo ago
+31.39
+
+no 16 submit A선_검증 COLAB 16 MODEL ARC2 - Version 2
+Succeeded · 2mo ago
+31.39
+
+easy rule kgmon [ARC26] 2025 Winning S 191caf - Version 1
+Succeeded · 1mo ago
+31.39
+
+1 44 drop easy rule kgmon [ARC26] 2026 - Version 1
+Succeeded · 2mo ago · difficult
+31.11
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+30.97
+
+option not success in AIMO - Version 6
+Succeeded · 3mo ago
+30.97
+
+5 myModel kgmon [ARC26] 2025 Winning S - Version 3
+Succeeded · 2mo ago · 1 model
+30.83
+
+Full_probmul_3 top- kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 4mo ago
+30.69
+
+Full_probmul_3 top- kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 3mo ago
+30.69
+
+easy task count kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 2mo ago · Easy
+30.69
+
+22 submit option not success in AIMO - Version 2
+Succeeded · 3mo ago · CONS_EPS = 2
+30.56
+
+22 all json submit option not success in AIM - Version 6
+Succeeded · 3mo ago
+30.56
+
+33 all json submit option not success in - Version 17
+Succeeded · 3mo ago
+30.56
+
+easy task count kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 1mo ago · Difficult
+30.56
+
+kgmon 분해 제출판 0909 - Version 1
+Succeeded · 17d ago
+30.56
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+30.28
+
+Full_probmul_3 top- kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 3mo ago
+30.28
+
+4H eval-dump- kgmon [ARC26] 2025 Winning S - Version 5
+Succeeded · 4mo ago
+30.14
+
+all json submit option not success in AIM - Version 7
+Succeeded · 3mo ago
+30.14
+
+33 all json submit option not success in - Version 9
+Succeeded · 3mo ago
+30.14
+
+6 all json submit option not succ 642486 - Version 4
+Succeeded · 3mo ago · 분류 복원
+30.14
+
+no 16 submit A선_검증 COLAB 16 MODEL ARC2 - Version 2
+Succeeded · 2mo ago
+30.14
+
+104 rule 6 all json submit option not succ - Version 1
+Succeeded · 2mo ago
+30.14
+
+easy rule kgmon [ARC26] 2025 Winning S 191caf - Version 1
+Succeeded · 2mo ago · Easy rule
+30.14
+
+real 5 myModel kgmon [ARC26] 2025 Winning S - Version 3
+Succeeded · 2mo ago
+29.86
+
+33 all engine4 easy rule kgmon [ARC26] 2026 - Version 4
+Succeeded · 2mo ago · Easy
+29.86
+
+33 all engine4 easy rule kgmon [ARC26] 2026 - Version 3
+Succeeded · 1mo ago · difficult
+29.86
+
+anti submit kgmon_고치기테스트_B_움직이는색합치기.ipynb - Version 1
+Succeeded · 12d ago
+29.86
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+29.72
+
+option not success in AIMO - Version 2
+Succeeded · 3mo ago
+29.72
+
+44 all json submit option not success in - Version 6
+Succeeded · 3mo ago
+29.72
+
+no 16 submit A선_검증 COLAB 16 MODEL ARC2 - Version 2
+Succeeded · 2mo ago
+29.72
+
+dfs_count_x_augu [ARC26] 2025 Winning Sol - Version 3
+Succeeded · 4mo ago
+29.44
+
+kgmon [ARC26] 2025 Winning S - Version 3
+Succeeded · 4mo ago
+29.44
+
+kgmon [ARC26] 2025 Winning S - Version 3
+Succeeded · 4mo ago
+29.44
+
+Full_probmul_3 top- kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 4mo ago
+29.44
+
+anti submit kgmon_고치기테스트_B_움직이는색합치기.ipynb - Version 1
+Succeeded · 14d ago
+29.44
+
+44 v3 loo 99rb entropy m 0f94b6 - Version 1
+Succeeded · 5mo ago
+29.31
+
+option not success in AIMO - Version 7
+Succeeded · 3mo ago
+29.31
+
+option not success in AIMO - Version 9
+Succeeded · 3mo ago
+29.31
+
+33 all json submit option not success in - Version 3
+Succeeded · 3mo ago
+29.31
+
+cc selector_hard rule kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 1mo ago
+29.31
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+29.03
+
+option not success in AIMO - Version 4
+Succeeded · 3mo ago
+29.03
+
+44 drop easy rule kgmon [ARC26] 2026 - Version 1
+Succeeded · 2mo ago · easy first
+29.03
+
+1dump easy rule kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 1mo ago
+29.03
+
+####################################
+Public Score
+
+Select
+
+2 step kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 1d ago
+27.36
+
+2 step kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 2d ago
+27.50
+
+2 step kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 4d ago
+28.61
+
+1 44 drop easy rule kgmon [ARC26] 2026 - Version 1
+Succeeded · 5d ago
+28.61
+
+v60-arc2-desc-agent-진단패치.ipynb - Version 1
+Succeeded · 6d ago
+7.36
+
+1 44 drop easy rule kgmon [ARC26] 2026 - Version 1
+Succeeded · 7d ago
+28.19
+
+v59_qwen3827bfp8_rule_kgmon_desc10 (1).ipynb - Version 2
+Succeeded · 10d ago
+5.28
+
+anti submit kgmon_고치기테스트_B_움직이는색합치기.ipynb - Version 1
+Succeeded · 11d ago
+27.64
+
+anti submit kgmon_고치기테스트_B_움직이는색합치기.ipynb - Version 1
+Succeeded · 12d ago
+29.86
+
+anti submit kgmon_고치기테스트_B_움직이는색합치기.ipynb - Version 1
+Succeeded · 13d ago
+27.64
+
+anti submit kgmon_고치기테스트_B_움직이는색합치기.ipynb - Version 1
+Succeeded · 14d ago
+29.44
+
+submit kgmon_고치기테스트_B_움직이는색합치기.ipynb - Version 2
+Succeeded · 15d ago
+28.19
+
+submit kgmon_고치기테스트_B_움직이는색합치기.ipynb - Version 2
+Succeeded · 16d ago
+28.61
+
+kgmon 분해 제출판 0909 - Version 1
+Succeeded · 17d ago
+30.56
+
+easyrule_kgmon_v2_규칙우선_드롭10_2차패스. - Version 2
+Succeeded · 18d ago
+26.11
+
+easyrule_kgmon_v2_규칙우선_드롭10_2차패스. - Version 2
+Succeeded · 18d ago
+27.78
+
+58 qwen 38 27b fp8 rule kgmon[ARC26] 2025 - Version 1
+Succeeded · 19d ago
+6.11
+
+58 qwen 38 27b fp8 rule kgmon[ARC26] 2025 - Version 1
+Succeeded · 21d ago
+6.67
+
+577 qwen 38 27b fp8 rule kgmon[ARC26] 2025 - Version 1
+Succeeded · 21d ago
+8.19
+
+easy rule kgmon [ARC26] 2025 Winning S 191caf - Version 1
+Succeeded · 23d ago
+29.03
+
+easy rule kgmon [ARC26] 2025 Winning S 191caf - Version 1
+Succeeded · 24d ago
+28.19
+
+easy rule kgmon [ARC26] 2025 Winning S 191caf - Version 1
+Succeeded · 25d ago
+26.94
+
+1dump easy rule kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 1mo ago
+28.61
+
+1dump easy rule kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 1mo ago
+26.11
+
+1dump easy rule kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 1mo ago
+29.03
+
+1dump easy rule kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 1mo ago
+27.50
+
+56 qwen 38 27b fp8 rule kgmon[ARC26] 2025 Winning - Version 2
+Succeeded · 1mo ago
+2.50
+
+1dump easy rule kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 1mo ago
+28.61
+
+55 Qwen3.8-27B-FP8 rule kgmon [ARC2 efa6ca - Version 1
+Succeeded · 1mo ago
+2.50
+
+easy rule kgmon [ARC26] 2025 Winning S 191caf - Version 1
+Succeeded · 1mo ago
+27.78
+
+easy rule kgmon [ARC26] 2025 Winning S 191caf - Version 1
+Succeeded · 1mo ago
+31.39
+
+cc selector_hard rule kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 1mo ago
+29.31
+
+bbb hard rule kgmon [ARC26] 2025 Winning S 191 - Version 3
+Succeeded · 1mo ago · easy
+27.36
+
+easy task count kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 1mo ago · Difficult
+30.56
+
+33 all engine4 easy rule kgmon [ARC26] 2026 - Version 3
+Succeeded · 1mo ago · difficult
+29.86
+
+easy rule kgmon [ARC26] 2025 Winning S 191caf - Version 3
+Succeeded · 1mo ago · difficult
+28.61
+
+1 44 drop easy rule kgmon [ARC26] 2026 - Version 1
+Succeeded · 2mo ago · difficult
+31.11
+
+44 drop easy rule kgmon [ARC26] 2026 - Version 1
+Succeeded · 2mo ago · easy first
+29.03
+
+33 all engine4 easy rule kgmon [ARC26] 2026 - Version 4
+Succeeded · 2mo ago · Easy
+29.86
+
+easy task count kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 2mo ago · Easy
+30.69
+
+easy rule kgmon [ARC26] 2025 Winning S 191caf - Version 1
+Succeeded · 2mo ago · Easy rule
+30.14
+
+ordered color fair pool submit kgmon [ARC26 8ecdb2 - Version 2
+Succeeded · 2mo ago · 42분: move3 +U형 재료 + U색 + 사다리 + 104규칙)이고 계열·항등은 없습니다.
+27.36
+
+color fair pool submit kgmon [ARC26] 2025 Win - Version 2
+Succeeded · 2mo ago · U형 재료 + U색 + 사다리 + 104규칙)이고 계열·항등은 없습니다.
+28.33
+
+quick submit 60 4gpu sorted kgmon [ARC26] 6d7b04 - Version 3
+Succeeded · 2mo ago · 게이트 전면 폐쇄(개입≈0), 항등 0, 35분, 104규칙 병렬(+α) 잠식 ~43분, 정렬, 재현은 그대로
+26.94
+
+submit 60 4gpu sorted kgmon [ARC26] 2025 Wi - Version 2
+Succeeded · 2mo ago · 항등 부활(스위프의 절반), 스위프 60분, a2 자유교체 하위30% + a1 교체 하위10% 위 전부 + 잠식 68분 + kgmon 답 파괴 채널
+25.28
+
+submit34_v251_light. kgmon [ARC26] 2025 Winning S - Version 8
+Succeeded · 2mo ago · 위와 같되 스위프를 U형+move3 위주로 축소, 병합은 빈/중복만 동일 (잠식 ~43분, 정렬, 재현)
+27.78
+
+submit 22 myModel kgmon [ARC26] 2025 Winning - Version 1
+Succeeded · 2mo ago · 스위프 선행(U형·색칠·계열·항등) + kgmon 큐 재배열 + 마감 단축 + 재현 디코더 제출 + 빈유닛 채움 58 시간 잠식 ~40분, 정렬, 선택기 재현
+28.19
+
+submit 00 단독 12점 1 m0del 2setp kgmon [ARC26] - Version 4
+Succeeded · 2mo ago
+12.92
+
+m0del 2setp kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 2mo ago
+0.00
+
+2 step kgmon [ARC26] 2025 Winning S - Version 4
+Succeeded · 2mo ago
+27.92
+
+2 step kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 2mo ago
+0.00
+
+104 rule 6 all json submit option not succ - Version 1
+Succeeded · 2mo ago
+30.14
+
+2 step kgmon [ARC26] 2025 Winning S - Version 1
+Succeeded · 2mo ago
+31.53
+
+no 16 submit A선_검증 COLAB 16 MODEL ARC2 - Version 2
+Succeeded · 2mo ago
+30.14
+
+no 16 submit A선_검증 COLAB 16 MODEL ARC2 - Version 2
+Succeeded · 2mo ago
+31.39
+
+no 16 submit A선_검증 COLAB 16 MODEL ARC2 - Version 2
+Succeeded · 2mo ago
+27.64
+
+no 16 submit A선_검증 COLAB 16 MODEL ARC2 - Version 2
+Succeeded · 2mo ago
+29.72
+
+no 16 submit A선_검증 COLAB 16 MODEL ARC2 - Version 2
+Succeeded · 2mo ago · xx 16 model by new 분류 . instruc 0
+28.06
+
+submit A선_검증 COLAB 16 MODEL ARC2 - Version 5
+Succeeded · 2mo ago · 16 model by new 분류. instruc X
+17.22
+
+submit repair all json submit option not suc - Version 6
+Succeeded · 2mo ago · insturc로 수리한 최초 모델은 실패
+27.64
+
+5 myModel kgmon [ARC26] 2025 Winning S - Version 3
+Succeeded · 2mo ago · 1 model
+30.83
+
+5 myModel kgmon [ARC26] 2025 Winning S - Version 3
+Succeeded · 2mo ago
+28.19
+
+real 5 myModel kgmon [ARC26] 2025 Winning S - Version 3
+Succeeded · 2mo ago
+29.86
+
+5 myModel kgmon [ARC26] 2025 Winning S - Version 3
+Succeeded · 2mo ago
+31.39
+
+16 myModel kgmon [ARC26] 2025 Winning S - Version 4
+Succeeded · 2mo ago
+25.83
+
+6 all json submit option not succ 642486 - Version 4
+Succeeded · 3mo ago · 분류 복원
+30.14
+
+44 all json submit option not success in - Version 6
+Succeeded · 3mo ago
+29.72
+
+55 all json submit option not succ 5a1f8f - Version 3
+Succeeded · 3mo ago
+28.47
+
+33 all json submit option not success in - Version 17
+Succeeded · 3mo ago
+30.56
+
+33 all json submit option not success in - Version 9
+Succeeded · 3mo ago
+30.14
+
+33 all json submit option not success in - Version 3
+Succeeded · 3mo ago
+29.31
+
+22 all json submit option not success in AIM - Version 6
+Succeeded · 3mo ago
+30.56
+
+all json submit option not success in AIM - Version 7
+Succeeded · 3mo ago
+30.14
+
+22 submit option not success in AIMO - Version 3
+Succeeded · 3mo ago · CONS_EPS = 4
+28.89
+
+22 submit option not success in AIMO - Version 4
+Succeeded · 3mo ago · CONS_EPS = 3
+31.39
+
+22 submit option not success in AIMO - Version 1
+Succeeded · 3mo ago · CONS_EPS = 1
+27.78
+
+22 submit option not success in AIMO - Version 2
+Succeeded · 3mo ago · CONS_EPS = 2
+30.56
+
+option not success in AIMO - Version 9
+Succeeded · 3mo ago
+29.31
+
+option not success in AIMO - Version 8
+Succeeded · 3mo ago
+28.19
+
+option not success in AIMO - Version 7
+Succeeded · 3mo ago
+29.31
+
+option not success in AIMO - Version 6
+Succeeded · 3mo ago
+30.97
+
+option not success in AIMO - Version 5
+Succeeded · 3mo ago
+28.06
+
+option not success in AIMO - Version 4
+Succeeded · 3mo ago
+29.03
+
+option not success in AIMO - Version 3
+Succeeded · 3mo ago
+27.64
+
+option not success in AIMO - Version 2
+Succeeded · 3mo ago
+29.72
+
+Full_probmul_3 top- kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 3mo ago
+30.69
+
+Full_probmul_3 top- kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 3mo ago
+30.28
+
+Full_probmul_3 top- kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 4mo ago
+28.61
+
+Full_probmul_3 top- kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 4mo ago
+27.08
+
+Full_probmul_3 top- kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 4mo ago
+27.78
+
+Full_probmul_3 top- kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 4mo ago
+30.69
+
+Full_probmul_3 top- kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 4mo ago
+29.44
+
+Full_probmul_3 top- kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 4mo ago
+28.47
+
+kgmon [ARC26] 2025 Winning S - Version 3
+Succeeded · 4mo ago
+29.44
+
+kgmon [ARC26] 2025 Winning S - Version 3
+Succeeded · 4mo ago
+29.44
+
+11 eval-dump- kgmon [ARC26] 2025 Winning - Version 1
+Succeeded · 4mo ago
+26.94
+
+11H eval-dump- kgmon [ARC26] 2025 Winning S - Version 2
+Succeeded · 4mo ago
+28.19
+
+4H eval-dump- kgmon [ARC26] 2025 Winning S - Version 5
+Succeeded · 4mo ago
+30.14
+
+kgmon [ARC26] 2025 Winning S - Version 3
+Succeeded · 4mo ago
+31.81
+
+22 dfs_count_x_augu [ARC26] 2025 Winning Sol - Version 1
+Succeeded · 4mo ago
+27.22
+
+22 dfs_count_x_augu [ARC26] 2025 Winning Sol - Version 1
+Succeeded · 4mo ago
+24.86
+
+dfs_count_x_augu [ARC26] 2025 Winning Sol - Version 3
+Succeeded · 4mo ago
+29.44
+
+dfs_count_x_augu [ARC26] 2025 Winning Sol - Version 3
+Succeeded · 4mo ago
+27.78
+
+dfs_count_x_augu [ARC26] 2025 Winning Sol - Version 3
+Succeeded · 4mo ago
+27.50
+
+dfs_count_x_augu [ARC26] 2025 Winning Sol - Version 3
+Succeeded · 4mo ago
+27.78
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+28.61
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+27.78
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+27.22
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+30.97
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+28.89
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+28.47
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+26.53
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+29.03
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+29.72
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+30.28
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+28.06
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago
+28.61
+
+entropy2500 [ARC26] 2025 Winning Solution - Version 4
+Succeeded · 5mo ago · 2500 09 22
+28.47
+
+entropy 1420 [ARC26] 2025 Winning Solution - Version 2
+Succeeded · 5mo ago
+26.94
+
+entropy 1420 [ARC26] 2025 Winning Solution - Version 2
+Succeeded · 5mo ago · 1720 9 20
+27.78
+
+entropy 1420 [ARC26] 2025 Winning Solution - Version 1
+Succeeded · 5mo ago
+27.78
+
+44 v3 loo 99rb entropy m 0f94b6 - Version 1
+Succeeded · 5mo ago
+31.81
+
+44 v3 loo 99rb entropy m 0f94b6 - Version 1
+Succeeded · 5mo ago
+29.31
+
+33 v3 loo 99rb entropy m 0f94b6 - Version 2
+Succeeded · 5mo ago · 9 5
+27.22
+
+33 v3 loo 99rb entropy m 0f94b6 - Version 1
+Succeeded · 5mo ago · 9 33
+28.06
+
+22 v3 loo 99rb entropy m 0f94b6 - Version 1
+Succeeded · 5mo ago
+27.64
+
+22 v3 loo 99rb entropy m 0f94b6 - Version 1
+Succeeded · 5mo ago · 10 17
+24.31
+
+v3 loo 99rb entropy m - Version 1
+Succeeded · 5mo ago
+26.81
+
+v3 loo 99rb entropy m - Version 1
+Succeeded · 5mo ago
+25.14
+
+v3 loo 99rb entropy m - Version 1
+Succeeded · 5mo ago
+26.81
+
+v3 loo 99rb entropy m - Version 1
+Succeeded · 5mo ago · 11 03
+24.72
+
+back 2Pass loo 99rb entropy merged-L4x4 - Version 1
+Succeeded · 5mo ago
+25.14
+
+back 2Pass loo 99rb entropy merged-L4x4 - Version 1
+Succeeded · 5mo ago
+24.31
+
+back 2Pass loo 99rb entropy merged-L4x4 - Version 1
+Succeeded · 5mo ago
+25.97
+
+back 2Pass loo 99rb entropy merged-L4x4 - Version 1
+Succeeded · 5mo ago · 11 43
+24.86
+
+hint + multi-maxscore loo 99rb entropy merged-L - Version 7
+Succeeded · 6mo ago
+16.94
+
+loo 99rb entropy merged-L4x4-v1 - Version 3
+Succeeded · 6mo ago
+23.47
+
+loo 99rb entropy merged-L4x4-v1 - Version 3
+Succeeded · 6mo ago
+28.47
+
+origin 21 nvarc v2 f174ee - Version 1
+Succeeded · 6mo ago · 000000000000000000000000000000000000000000
+16.81
+
+loo_99RB entropy hintX ARC-2 (2026) Qwen3 - Version 2
+Succeeded · 6mo ago
+10.83
+
+loo_99RB entropy hintX ARC-2 (2026) Qwen3 - Version 2
+Succeeded · 6mo ago
+10.42
+
+loo_99RB entropy hintX ARC-2 (2026) Qwen3 - Version 2
+Succeeded · 6mo ago
+10.83
+
+v9 hint ARC-2 (2026) 1111 - Version 1
+Succeeded · 6mo ago
+0.00
+
+del only ee78d87 hint ARC-2 (2026) Qwen3 Unsloth - Version 1
+Succeeded · 6mo ago · 11 ++ add RB
+8.75
+
+v5 hint NVARC ARC 2025 Winning Solution - Version 3
+Succeeded · 6mo ago
+7.92
+
+[8.75] NVARC ARC 2025 Winning Solution (for T4) - Version 1
+Succeeded · 6mo ago
+10.42
+
+'submission.json' will be evaluated for your final score
