@@ -1,0 +1,548 @@
+
+콘텐츠 로 바로가기
+
+ARC-AGI-3 마일스톤 2
+ARC-AGI-3 마일스톤 2
+Duck Harness를 기반으로 개발했습니다. Duck Harness는 제가 개발한 오픈소스 솔루션으로 ARC-AGI-3 대회에서 27.89점을 받았습니다.
+
+프로젝트 개요 · 2026년 10월 1일
+
+제가 오픈소스로 공개한 노트북이 ARC-AGI-3 공개 경진대회 순위표에서 27.89 점을 받았습니다 . 이 글에서는 제가 제출한 내용과 구현한 변경 사항에 대해 설명합니다.
+
+제 여정의 출발점은 Tufa Labs가 이 대회에서 첫 번째 마일스톤 상을 위해 공개한 Duck 하네스였습니다. 최초 솔버, 하네스, 그리고 관련 자료를 제공한 Jeroen Cottaar와 Tufa Labs 에 진심으로 감사드립니다. 6월에 공개된 마일스톤 자료 와 기술 설명에는 기본 접근 방식이 자세히 설명되어 있습니다.
+
+저는 그들의 핵심 아이디어를 유지했습니다 . 즉, 언어 모델이 파이썬 도구를 통해 게임을 플레이하고, 코드를 사용하여 보드를 검사하고, 메커니즘을 테스트하고, 행동을 실행하는 것입니다. 제 작업은 대회에서 요구되는 엄격한 하드웨어 제약 조건 내에서 이러한 과정을 더욱 효율적으로 만드는 데 집중했습니다. 이는 제한된 시간 안에 모델이 수행할 수 있는 유용한 연산량을 늘리는 것뿐만 아니라, 더 나은 결정을 내리는 데 필요한 정보에 접근할 수 있도록 하는 것을 의미했습니다.
+
+소스 저장소에는 수정된 하네스와 제 SGLang 빌더 및 패치가 포함되어 있습니다 . 구성 가이드 에는 개별 기능에 대한 설명이 있으며, 이번 제출에서는 활성화되지 않은 실험적인 기능도 포함되어 있습니다.
+
+요약 : 가장 영향력 있는 변화와 발견 사항:
+
+더 나은 모델을 사용하는 것이 큰 도움이 됩니다. 대회 기간 동안 Qwen3.6-27B 에서 Qwen3.8-27B 로 , 그리고 최종적으로 Qwen3.8-Flash-Next 로 버전을 변경했는데 , 각 버전마다 상당한 성능 향상이 있었습니다.
+애니메이션 노출. 일부 게임은 중요한 정보를 담고 있는 애니메이션을 재생합니다. 모델에 중간 프레임에 대한 접근 권한을 부여하면 모델이 해당 게임을 이해하고 해결하는 데 도움이 됩니다.
+인지 능력 향상. 이미지 배율을 4배에서 10배로 확대하고, 변경된 픽셀을 강조하는 차이 이미지를 추가하고, 게임 종료 후 보드 상태를 보여줌으로써 모델이 게임을 더 잘 이해할 수 있게 되었습니다.
+새로운 행동 방식을 추가했습니다. 실행 취소 기능을 사용할 수 있게 된 덕분에 대회에서 좋은 성적을 거둘 수 있었습니다.
+불필요한 동작 방지. 파이썬 코드 조각에서 가드는 동작 후 내부 보드에 변화가 없으면 추가 동작을 중지합니다.
+유용한 정보와 코드를 유지했습니다. 더 넓은 맥락은 더 어려운 게임과 레벨에 도움이 되었습니다. 맥락이 확장됨에 따라, 기존의 텍스트 기반 세계 모델 메커니즘을 완전히 끄는 것이 제 테스트에서 가장 효과적이었습니다. 모델이 작성한 Python 함수를 유지함으로써, 호출 및 레벨 전반에 걸쳐 헬퍼 함수를 ​​재사용할 수 있어 불필요한 토큰 생성을 방지할 수 있습니다.
+토큰 처리량 극대화. 실행 후반부에 점수가 계속 향상되는 것을 확인하여 토큰 처리량을 늘리는 것이 점수 향상에 효과적인 방법임을 알 수 있었습니다. 이에 따라 다양한 모델 양자화 방식을 테스트하고 접두사 캐싱을 개선했습니다.
+게임 간 연산량을 재분배합니다. 균등 할당 방식은 진행 상황이 미미한 게임에 많은 토큰을 소모하게 합니다. 따라서 현재 진행 상황이 유망해 보이는 게임에 더 많은 작업을 할당하는 스케줄러를 추가했습니다.
+다음 섹션에서는 대회 기간 동안 제가 경험한 변화와 발견들을 자세히 설명하겠습니다.
+
+1. 모델 및 서비스
+저는 Qwen3.6-27B 모델을 사용한 오리지널 Duck 하네스로 실험을 시작했습니다 . 이후 후속 모델인 Qwen3.8-27B 로 , 그리고 더 큰 Qwen3.8-Flash-Next 로 교체했습니다 . 모델을 바꿀 때마다 실험 결과가 상당히 개선되었고, 가장 최근 모델인 Qwen3.8-Flash-Next로 교체한 후에는 2026년 9월 6일에 잠시 리더보드 1위를 차지하기도 했지만, 곧 Tufa Labs에 추월당했습니다.
+
+RTX PRO 6000에 Qwen3.8-Flash-Next를 탑재하려면 대용량 PLE 임베딩 테이블을 호스트 RAM으로 오프로드해야 합니다. 처음에는 RadixArk의 NVFP4 양자화를 사용했지만 , 마감 직전에 Intel의 W4A16 AutoRound 양자화 로 변경했습니다 . 테스트 결과, 품질과 처리량은 비슷하면서도 KV 캐시에 더 많은 VRAM을 사용할 수 있었습니다.
+
+오픈 소스 제출물은 투기적 디코딩을 위해 Albucino 의 별도 양자화된 MTP 드래프트 체크포인트를 사용합니다 . 저는 대회용 머신에 시스템 메모리가 충분하기 때문에 메인 모델의 양자화되지 않은 BF16 PLE 테이블을 그대로 유지하기로 했습니다. (시스템 RAM이 부족한 머신의 경우, Albucino 버전이 FP8 PLE 테이블을 사용하는 대안이 될 수 있습니다.)
+
+추론은 John Pezzulli의 SGLang 포크인 Pennyroyal의 v2.5.3 릴리스(커밋 번호는 생략) 에서 실행됩니다 d00d88e. 노트북에서 사용된 빌드에는 몇 가지 추가 패치가 포함되어 있습니다.
+
+작은 배치 크기에서 더 빠른 행렬 곱셈을 위해 Gabriel Olympie의 패치 0004를 기반으로 수정된 Low-M BF16 GEMM 지원 기능이 추가되었습니다.
+Mamy Ratsimbazafy의 저장소에 있는 패치 0002 의 예산 회계 변경 사항을 기반으로 하는 투기적 상태 메모리 예산 수정입니다 . 이를 통해 실제로 할당되지 않은 버퍼에 대한 메모리 예약을 방지합니다.
+내 빌드 스크립트 에 포함된 Marlin 스케일 dtype 수정 사항은 양자화된 모델을 로드할 때 발생하는 BF16/FP16 불일치를 해결합니다.
+아래에 설명된 빌드 스크립트 에 포함된 제 접두사 캐시 패치는 유용한 Mamba 체크포인트를 유지하고 릴리스하기 전에 LRU 위치를 새로 고치는 역할을 합니다.
+빌드 스크립트 에 포함된 제 체크포인트 프리페치 패치는 병렬 리더를 사용하여 로더 순서대로 샤드를 읽고, 항상 한 샤드씩 미리 가져오도록 합니다. 제출된 코드는 이 패치를 외부 백그라운드 프리페처와 함께 사용했습니다.
+모델의 로딩 효율성을 높이기 위해 샤딩을 재구성했습니다. 단일의 매우 큰 샤드로는 로더의 접근 패턴에 맞춰 프리페칭을 유지하기 어려웠습니다. 샤드 크기를 줄이고 백그라운드 프리페처를 도입함으로써 시작이 훨씬 안정적이 되었습니다. 이러한 변경 사항은 스토리지 레이아웃에 대한 것이며, 모델의 가중치는 변경되지 않았습니다.
+
+오픈소스 제출에 있어 중요한 설정은 다음과 같습니다.
+
+환경	값
+GPU	싱글 RTX PRO 6000
+병렬 스트림	10
+컨텍스트 창을 활용하세요	131,072 토큰 (128 Ki)
+요청당 최대 생성 출력	12,288 토큰 (12 Ki)
+서버 컨텍스트 제한	139,264 토큰 (136 Ki)
+구성된 컨텍스트 드레인	59,392 토큰 (58 Ki)
+KV-캐시 dtype	FP8 E4M3
+맘바 캐시 용량	60개의 슬롯
+정적 메모리 비율	0.96
+덩어리 형태로 미리 채워져 있습니다.	8,192 토큰
+추측 단계	3
+샘플링 매개변수	온도 0.7, top-p 0.95, top-k 20
+최종 제출 구성으로 전체 데모 실행을 완료하기 전에 Kaggle의 컴퓨팅 용량 제한에 도달했습니다. 다음 주에 데모 세트에서 실행하고 결과를 이 글에 업데이트할 예정입니다.
+
+2. 컨텍스트 크기 증가
+모델에 더 많은 컨텍스트 정보를 유지하도록 하는 것은 특히 난이도가 높은 게임과 레벨에서 도움이 되었지만, 이는 서버 스택이 해당 정보를 효율적으로 재사용할 수 있을 때만 가능했습니다. 그렇지 않으면 모든 요청마다 긴 기록을 다시 처리해야 하므로 사용 가능한 런타임의 상당 부분을 소모하게 됩니다.
+
+Duck 하네스는 시스템 프롬프트와 그에 따른 상호작용 기록을 유지합니다. 사용자 프롬프트, 모델의 사고 과정 및 어시스턴트 응답, 도구 호출 및 출력 등이 해당 기록에 추가됩니다. (참고: 모델의 사고 과정 출력을 유지하는 것은 의도적인 선택이며, 기존 하네스에도 이미 포함되어 있습니다. 이를 제거하면 점수가 크게 하락합니다.) 기록이 컨텍스트 제한을 초과할 정도로 커지면 기록의 시작 부분(시스템 프롬프트 바로 뒤)에서 잘라내기가 수행됩니다. 이로 인해 시스템 프롬프트 바로 뒤의 내용이 변경되므로 이전 접두사의 대부분을 더 이상 재사용할 수 없습니다. 이 문제를 해결하기 위해 여러 가지 수정이 필요했으며, 자세한 내용은 아래에서 설명합니다.
+
+실제 입력 크기 추정
+기존의 문자 기반 추정 방식은 문자와 토큰 간의 고정된 변환 계수를 사용했으며, base64로 인코딩된 PNG 문자열을 포함한 직렬화된 이미지 데이터도 텍스트처럼 계산했습니다. 이는 이미지의 실제 토큰 사용량을 제대로 반영하지 못하는 방식입니다.
+
+수정된 시스템은 텍스트를 별도로 추정하고 백엔드에서 보고된 사용량에 맞춰 변환 계수를 보정합니다. 이미지 토큰은 이미지 크기와 모델의 패치/병합 레이아웃을 기반으로 추정됩니다. 이러한 개선을 통해 텍스트 다듬기 결정이 실제 컨텍스트 예산을 훨씬 더 정확하게 반영하게 되었습니다.
+
+캐시 보호를 위해 동시 접속을 제한합니다.
+요청이 완료되면 일반적으로 도구 호출(대개 1초 이내 소요)을 위해 잠시 대기한 후, 다시 생성 작업을 계속합니다. 백엔드가 KV 캐시 또는 Mamba 상태에 유지할 수 있는 용량보다 더 많은 게임을 시작하면 캐시 압력이 발생합니다. 반환되는 게임은 대기열에 추가되고, 최종적으로 처리될 때쯤에는 그 사이에 자리를 차지한 다른 게임들 때문에 접두사가 KV 캐시에서 제거될 수 있습니다.
+
+이를 방지하기 위해 서버 요청 제한과 동일하게 최대 10개의 게임 스트림으로 접속을 제한하여 캐시된 접두사를 유지하고 재접속 시 재사용할 수 있도록 했습니다. 나머지 게임은 서버 측에서 대기합니다(동시 접속 제한 또는 우선순위 스케줄링이 활성화된 경우 우선순위 게이트 메커니즘에 따라).
+
+유용한 맘바 체크포인트만 유지합니다.
+Flash-Next는 접두사 재사용을 위해 주의 KV 상태와 관련 재귀 상태 체크포인트가 모두 필요합니다. 충분한 KV 용량만으로는 캐시 적중을 보장할 수 없었습니다.
+
+이 캐시 패치는 프리필(prefill) 과정에서 체크포인트가 과도하게 생성되는 것을 방지합니다. 이는 컨텍스트를 끝에서부터 줄이는 경우가 없기 때문에 불필요한 작업입니다. 캐시 부담을 줄이기 위해 중간 체크포인트로 상태 캐시를 채우는 대신 최종 프리필 체크포인트만 유지합니다. 또한, 콜드 스타트 ​​경로에 대한 제한된 분기 체크포인트를 유지하여 시스템 프롬프트 끝에서부터 재시작할 수 있도록 합니다. 아울러, 프리필 종료 체크포인트의 LRU 위치는 디코딩 부분이 완료될 때 갱신됩니다.
+
+디코딩 종료 체크포인트가 생성되더라도 프리필 종료 체크포인트를 유지하는 것이 중요합니다. 재토큰화로 인해 토큰화된 대화가 이전에 생성된 토큰 시퀀스와 정확히 일치하지 않을 수 있기 때문입니다. 따라서 최종 프리필 체크포인트를 유지하면 캐시에 추가할 수 있는 재사용 가능한 상태를 보장할 수 있습니다.
+
+더 큰 블록 단위로 다듬기
+하네스가 다음 요청에 맞도록 필요한 만큼의 이력만 삭제하면 곧 다시 한계에 도달합니다. 작은 조정 하나하나가 접두사를 변경하고 또 다른 비용이 많이 드는 사전 입력 작업을 발생시킵니다.
+
+히스테리시스를 추가했습니다 . 컨텍스트가 예산을 초과하면 더 큰 블록이 버려집니다. 이렇게 하면 히스토리가 여러 요청에 대해 확장될 공간을 확보하면서 접두사는 재사용할 수 있습니다.
+
+오픈소스로 공개된 해당 코드는 최대 컨텍스트 길이를 128 Ki로 설정하고 , 그중 12 Ki 토큰을 출력용으로 예약합니다. 입력이 예약된 길이에 가까워지면, 약 57 Ki의 컨텍스트를 유지하기 위해 더 큰 블록의 히스토리를 잘라냅니다 . 이는 매번 잘라낼 때마다 일부 히스토리를 유지하는 대신, 반복적인 프리필 작업을 크게 줄이는 방식입니다.
+
+캐시된 접두사 길이와 전체 프롬프트 길이의 관계
+
+약간 다른 설정(120 Ki 하네스 컨텍스트 윈도우, 52 Ki 드레인, 정적 메모리 비율 0.955, 고정 우선순위 테일 B=5)으로 실행한 이전 데모 버전에서 접두사 재사용이 확인되었습니다. 대각선 부근의 지점들은 프롬프트의 거의 전체를 재사용합니다. 40~62k 부근의 캐시 사용량이 적은 클러스터는 이전 설정에서 트리밍 후 재프리필링이 이루어졌음을 보여줍니다. 62k보다 긴 3,248개의 요청 중 캐시된 토큰이 10k 미만인 요청은 단 하나뿐이었습니다. 완료된 5,132개의 게임 요청 전체에서 프롬프트 토큰의 93.43%가 캐시에서 재사용되었습니다 .
+
+아래 표는 이전 데모 실행 중에 측정된 캐시 재사용 및 서비스 성능을 요약한 것입니다. 이는 최종 제출 구성에서의 측정값은 아니지만, 대략적으로 유사할 것으로 예상됩니다.
+
+미터법	이전 데모 실행
+토큰으로 가중치를 부여한 접두사 캐싱 비율	93.43%
+P90 유효 사전 충전 처리량	10,552.6 토큰/초
+P90 집계 디코딩 처리량	836.6 토큰/초
+하네스 측 발전 처리량	609.0 토큰/초
+사전 충전 시간 비율¹	15.25%
+장시간 프롬프트 캐시 미스율²	0.03% (1/3,248)
+¹ 초기 사전 채우기 간격이 차지하는 실제 시간의 비율이며, 중복은 한 번만 계산됩니다. 정확한 GPU 사용률은 아닙니다.
+
+² 62,000개 이상의 토큰을 사용하는 프롬프트 중 캐시된 토큰 수가 10,000개 미만인 프롬프트의 비율.
+
+3. 여전히 도움이 될 수 있는 곳에 연산 능력을 할당하십시오.
+게임마다 동일한 시간 제한을 두면 연산 능력과 개발 기회가 낭비됩니다. 어떤 게임은 일찍 끝나기도 하고, 어떤 게임은 많은 연산량을 소모하면서도 다음 레벨로 넘어가지 못하기도 합니다. 반면, 게임 진행이 원활한 게임이라면 더 많은 시간이 필요할 수도 있습니다.
+
+이를 위해 이제 모든 게임 세션이 동시에 시작됩니다(전체 게임 실행을 고정된 수의 동시 게임으로 제한하는 대신). 스케줄러는 동시에 접속할 수 있는 게임을 최대 10개로 제한하고 , 나머지 게임은 상태가 고정된 채 백그라운드에서 대기합니다. 이는 게임당 고정된 시간 예산을 사용하는 방식보다 주로 두 가지 이점을 제공합니다.
+
+사용 가능한 10 개의 슬롯은 완료되지 않은 게임이 충분히 남아 있는 동안 계속 채워집니다 (도구 호출로 인한 짧은 중단 시간 제외). 일부 게임이 일찍 종료되면 남은 예산은 자동으로 다른 게임으로 재분배됩니다.
+이 기능은 스케줄링 알고리즘에서 유망한 게임을 우선시함으로써 연산 능력을 해당 게임들에 재분배할 수 있도록 합니다 .
+공개된 코드에서 스케줄링 알고리즘은 현재 가장 높은 우선순위 P를 가진 게임을 허용하며 , 이 우선순위는 다음과 같이 계산됩니다.
+
+
+
+
+여기서 ℓ은 현재 레벨 번호, a는 해당 레벨에서 사용한 행동 횟수, t는 해당 레벨에서 사용한 생성 토큰 수입니다. N은 게임 메타데이터에 보고된 총 레벨 수이며, 6~10으로 제한되고, 해당 값을 사용할 수 없거나 유효하지 않은 경우 10으로 대체됩니다.
+
+A는 현재 레벨 완료 시 즉시 얻는 점수를 근사적으로 나타낸 것으로 , 공식 점수 계산식과 유사한 행동 효율성 페널티가 적용됩니다. 계수 55 / (N(N+1)/2)는 총 레벨 수가 다른 게임들을 고려하여 10개 레벨 게임을 기준으로 정규화한 값입니다. 이 정규화는 A에만 적용됩니다.
+
+B는 현재 레벨을 완료한 후 추가 진행을 할 수 있는 기회를 나타냅니다 . 이는 해당 레벨 완료 후 남은 레벨 수를 기준으로 간단한 조회를 통해 결정됩니다.
+
+현재 레벨 이후 남은 레벨	비
+3개 이상	8
+2	7
+1	5
+0	0
+이 값들은 경험적 진행 값이며, 확정된 완료 확률이 아닙니다. 게임 초반에는 미래 진행 상황에 더 큰 가중치를 부여하고 마지막 레벨에서는 완전히 제거합니다. B는 점수 정규화나 추가적인 행동 효율성 승수를 받지 않으며, 시간 기반 감소 규칙이 그대로 적용됩니다. C는 레벨이 완료되지 않고 행동과 생성을 흡수할수록 우선순위가 낮아집니다.
+
+C는 실제 게임 진행 상황을 기반으로 보정되었습니다 . 여기에는 이전 네 번의 실행에서 관찰된 725개의 레벨 시도(완료된 레벨 557개와 미완료된 레벨 168개 포함)가 포함됩니다. 완료율은 관찰이 완료되기 전에 게임이 종료된 경우를 고려하여, 아직 완료되지 않은 레벨 시도 중 지출이 발생한 구간에서 측정했습니다. 이러한 곡선에는 지수 함수보다 가우시안 형태의 감소 곡선이 더 잘 들어맞았습니다. 다음 이미지는 측정된 데이터와 행동 및 토큰에 대한 조정된 곡선을 보여줍니다.
+
+동작에 대한 C의 보정
+토큰에 대한 C의 보정
+
+장 마감 직전에 미래 가치를 낮추세요
+마감 시간이 가까워질수록 레벨 완료가 추가 완료로 이어질 시간이 줄어듭니다. 예정된 실행 시간의 마지막 20% 동안 B는 조회 값에서 0으로 선형적으로 감소합니다 .
+
+
+여기서 r은 남은 시간이고 T는 예정된 총 소요 시간입니다. A와 C는 계속 활성화된 상태로 유지됩니다. 이는 현재 레벨을 완료하여 점수를 극대화하는 데 점차 중점을 두면서도 게임이 중단될 경우 불이익을 주는 방식을 유지합니다.
+
+스케줄링 시 접두사 재사용을 유지합니다.
+각 툴 호출 후 게임이 중단되는 것을 허용하면 접두사 캐싱 개선 효과가 저해됩니다. 따라서 게임은 일반적으로 툴 호출 및 재개 후에도 입장 슬롯을 유지합니다. 컨텍스트 제거는 자연스러운 인계 지점입니다 . 접두사가 이미 변경되었으므로 이 요청에는 상당한 사전 채우기가 필요합니다. 이 시점에서 게임은 우선순위 큐에 다시 들어가고, 해제된 슬롯은 가장 높은 우선순위를 가진 게임(방금 큐에 들어간 게임과 동일할 수도 있음)에 할당됩니다. 따라서 우선순위 기반 순위 지정은 유용한 캐시된 연산을 유지하는 것을 강력하게 선호하는 정책에 따라 작동합니다.
+
+4. 에이전트가 관찰하고 수행할 수 있는 기능을 개선합니다.
+애니메이션
+일부 ARC 게임은 동작 중에 애니메이션을 재생하는데, 이는 실제 게임판 상태 사이에 중간 애니메이션 프레임으로 제공됩니다. 어떤 게임에서는 이러한 애니메이션이 모델이 게임 메커니즘을 더 잘 이해하는 데 도움이 되지만, 어떤 게임에서는 이러한 중간 프레임을 읽지 않으면 사실상 해결할 수 없을 수도 있습니다(예: 공개 데모 세트의 tn36 게임). 제가 테스트해 본 결과, 모든 인식 변화 중에서 모델에 애니메이션을 노출하는 것이 가장 큰 효과를 보였습니다.
+
+이 구현은 Jakob Brüggen의 노트북 에서 영감을 받았습니다 . 그의 구현과 마찬가지로, 이 하네스는 애니메이션을 두 가지 형태로 제공합니다. 하나는 게임에서 반환된 실제 애니메이션 프레임(중복 제거됨)이고, 다른 하나는 애니메이션 부분을 텍스트 형식으로 설명하는 간결한 타임라인입니다. 그의 구현과 의도적으로 다른 점은 이 두 가지를 모델에 노출하는 방식입니다. 그의 노트북에서는 함수 호출을 통해 애니메이션 프레임을 출력하는 방식이었지만, 여기서는 파이썬 REPL에서 변수로 직접 노출하여 모델이 이를 검사, 비교 및 ​​계산할 수 있도록 했습니다(실제로 모델이 이렇게 작동하는 것을 확인했습니다).
+
+해당 노트북에서 얻은 또 다른 영감은 모델에게 애니메이션을 참조하도록 힌트를 주는 정확한 시점에 대한 것입니다. 마지막 동작의 애니메이션은 REPL에서 항상 읽을 수 있지만, 애니메이션을 조사하도록 하는 구체적인 힌트는 애니메이션에 "일시적 픽셀"이 포함된 경우에만 제공됩니다. 일시적 픽셀이란 시작 프레임에서 최종 프레임까지의 경로에서 두 번 이상 변경되는 픽셀, 즉 일반적인 게임 상태 이미지에서는 보이지 않는 상태를 나타내는 픽셀을 의미합니다.
+
+객체 수준 변경 사항frame_diff
+파이썬에서 두 보드 상태를 비교할 수 있는 헬퍼 함수를 ​​추가했습니다 frame_diff(). 기본적으로 가장 최근 동작 전후의 보드 상태를 비교하지만, 과거 프레임의 상태도 비교할 수 있습니다. 이 함수는 이동, 회전, 생성, 소멸, 색상 변경, 크기 변경된 객체와 변경된 셀의 개수 등 변경 사항에 대한 구조화된 설명을 반환합니다. 변경되지 않은 객체는 제외하여 출력 결과를 간결하게 유지합니다.
+
+이는 하네스를 동일 색상의 4방향 연결 구성 요소로 분할하는 것을 기반으로 합니다. 매칭은 휴리스틱 방식으로 이루어지며, 접촉하는 객체는 하나의 구성 요소로 병합될 수 있고, 유사한 객체가 여러 개 있는 경우 대응 관계가 모호해질 수 있습니다. 프롬프트는 이러한 제한 사항을 설명하여 모델이 결과를 객체 식별의 확정적인 것으로 간주하지 않고도 사용할 수 있도록 합니다.
+
+보드 이미지
+모델에게 제시된 이미지에 여러 가지 변경 사항이 적용되었습니다.
+
+게임 오버 이미지. 게임 오버 후, 이제 시스템은 재시작된 레벨만 보여주는 대신 게임 오버 시의 치명적인 프레임도 함께 제공합니다. 이를 통해 모델은 현재 화면에서 증거가 사라지기 전에 실패 원인을 검사할 수 있습니다.
+
+차이 이미지. 사용자가 동작을 수행한 후에는 이전 분석기 턴 이후 변경된 픽셀을 강조 표시하는 추가 차이 이미지가 표시됩니다. 이 이미지는 여러 동작에 걸쳐 변경될 수 있습니다. 레벨 경계를 넘거나 보드가 변경되지 않은 경우에는 이러한 이미지가 생략됩니다. 게임 종료 후에는 마지막으로 생존한 프레임과 사망한 프레임을 비교하는 유사한 차이 이미지가 표시됩니다.
+
+이미지 관련 점수 향상에 가장 큰 영향을 미친 것은 이미지 확대 배율을 기존 4배에서 10 배로 변경한 것이었습니다 . 컨텍스트 길이 추정 방식이 변경됨에 따라 토큰 개수 증가가 정확하게 반영되었습니다.
+
+중요한 프롬프트 변경 사항
+반복되는 오프닝 프롬프트 명확화
+
+기존 시스템은 모델이 아무런 행동도 취하지 않고 추론하거나 보드를 계속 검사할 때 주기적으로 사용자에게 메시지를 표시합니다. 그러나 이전 행동 시퀀스의 결과를 반복하면서 새로운 일이 발생하지 않았음을 명확히 알리지 않을 수 있습니다. 따라서 이전 게임 오버나 레벨 완료가 마치 새로운 이벤트처럼 인식될 수 있습니다.
+
+후속 메시지에서 아무런 조치가 실행되지 않았을 때 이를 명시적으로 표시하고, 이전 결과를 알림으로 분류하도록 수정했습니다. 이렇게 하면 모델이 새로운 피드백과 이미 고려한 정보를 구분하여 반복되는 텍스트를 게임의 다른 변경 사항으로 오인하지 않도록 도와줍니다.
+
+게임 오버 가이드
+
+게임이 끝나면 Tufa 하네스는 사용자 메시지에 짧은 문장만 표시합니다.
+
+게임이 끝났습니다.
+
+해당 메시지는 모델에게 가능한 원인이나 계속 진행하는 방법에 대한 정보를 전혀 제공하지 않았습니다. 모델은 보통 혼란스러워하며 오랜 시간 분석한 후, 결국 레벨이 초기화되었으니 다시 시작할 수 있다는 결론을 내렸습니다. 모델에게 더 많은 맥락을 제공하기 위해 게임 오버 시 자세한 설명 메시지를 추가했습니다.
+
+시스템 메시지: 게임 종료 플래그 해석 중
+
+플래그 의미: game_over= 이번 시도 실패(사망 또는 시간 제한 초과) — 레벨은 초기 상태로 자동 초기화되며, 완료한 레벨은 유지됩니다. 하지만 이는 게임 승리를 의미하는 것은 아닙니다. level_completed= 한 레벨 진행. run_complete/ done= 게임 전체 승리. 사망은 행동 자체(예: 위험 구역) 또는 단계/시간 제한 소진으로 발생합니다. 그리드 경계에 표시되는 막대가 각 행동마다 줄어드는 것을 확인하고, 남은 시간 제한을 계획에 포함시키세요.
+
+게임 종료 후 사용자에게 표시되는 메시지: 오류 진단
+
+이전 시퀀스 중에 게임 오버가 발생했습니다. 이는 시도가 실패했음을 의미합니다(게임이 종료된 것은 아닙니다). 게임은 이미 자동으로 재설정되었습니다. 현재 레벨은 초기 상태로 다시 시작되며 이전에 완료한 레벨은 유지됩니다. 게임 오버는 특정 행동(예: 위험 칸으로 이동) 또는 스텝/시간 예산 소진으로 발생하며, 이는 일반적으로 그리드 테두리에 있는 막대로 표시되고 각 행동마다 줄어듭니다. 다시 행동하기 전에 사망 직전의 보드를 확인하여 원인을 진단하십시오. history[-1].action'RESET', history[-2].action치명적인 행동, history[-2].frame사망 프레임(치명적인 행동 후의 보드), 그리고 사망 프레임 history[-3].frame바로 직전의 보드를 확인하세요. 사망 프레임에서 치명적인 행동이 어떤 칸을 대상으로 했는지 확인하고, 사망 프레임의 예산 막대를 확인하십시오. 막대 규칙: 막대가 각 행동마다 줄어드는 것은 정상입니다. 막대가 약간 짧아졌다고 해서 사망 원인이 되는 것은 아닙니다. 예산이 사망의 원인인 경우는 사망 프레임( history[-2].frame)에서 막대가 완전히(또는 거의 완전히) 소진된 경우에만 해당됩니다. 게이지가 완전히 소진된 경우: 더 적은 행동으로 목표에 도달하거나 게이지를 회복할 방법을 찾아야 합니다(예: 게이지를 채워주는 아이템 획득). 게이지에 잔여 게이지가 분명히 남아 있는 경우: 치명적인 행동 자체가 사망의 원인입니다(위험 또는 금지된 행동). 동일한 경로를 다시 시도하지 말고 다른 접근 방식을 시도해야 합니다. 진단된 원인을 월드 모델에 기록하십시오.
+
+게임 종료 후 사용자에게 표시되는 메시지: 계획 수정
+
+똑같은 수순을 다시 두지 마세요. 게임은 결정론적이므로 방금 당신을 죽인 수순을 반복하면 또 죽게 됩니다. 치명적인 순간이 오기 전에 계획을 바꾸세요. 다른 경로, 행동 또는 타이밍을 시도하세요. 같은 수가 '효과가 있어야 한다'고 믿는다면, 이번 죽음은 바로 그 믿음을 틀린 것으로 판명한 것입니다. 다시 시도하는 대신 월드 모델에 수정 사항을 기록해 두세요.
+
+레벨 전환 안내
+
+레벨업 안내 메시지는 이제 세 가지 사항을 강조합니다. 이전 레벨의 메커니즘이 종종 계승된다는 점, 새로운 요소가 도입되면 이를 이해해야 한다는 점, 그리고 목표는 그대로 유지되거나 조정이 필요할 수 있다는 점입니다. 또한 현재 프레임이 새로운 레벨의 시작 상태임을 명시적으로 알려줍니다.
+
+시스템 추가
+
+레벨은 일반적으로 이전 레벨, 특히 가장 최근 레벨에서 학습한 메커니즘을 기반으로 구성됩니다. 기존의 지식을 출발점으로 삼아 가설을 세우고, 새로운 증거로 인해 모순되는 부분이 있다면 다시 확인하십시오. 새로운 레벨에서는 종종 익숙하지 않은 보드 요소 등을 통해 추가적인 메커니즘이 도입됩니다. 이러한 추가 요소는 레벨을 해결하는 데 중요한 역할을 하는 경우가 많습니다. 목표는 동일하지만 목표 달성에 새로운 메커니즘이 필요할 수도 있고, 목표 자체가 변경될 수도 있습니다.
+
+레벨 완료 후 사용자에게 표시되는 메시지:
+
+이전 레벨을 완료했습니다. current_frame이제 다음 레벨의 시작 화면이 표시됩니다. 함께 표시되는 현재 그리드 이미지는 이 새로운 화면을 보여줍니다. 이전 레벨의 진행 순서를 이어가지 말고, 이 레이아웃에 맞는 새로운 계획을 세우세요.
+
+이전 레벨에서 확립한 메커니즘을 바탕으로 시작하세요. 특별한 이유 없이 이전 메커니즘을 다시 살펴보려 하지 마세요. 새로운 보드를 살펴보고 익숙하지 않은 요소, 변경된 배치 또는 이전 이해로는 설명할 수 없는 상호 작용이 있는지 확인하세요. 새로운 요소는 종종 이 레벨을 해결하는 데 필요한 메커니즘을 도입하므로, 동작 방식이 불분명할 때는 짧고 유용한 테스트를 우선적으로 수행하세요.
+
+목표를 재평가하십시오. 이전 목표가 여전히 유효하여 새로운 방식이 필요한 것인지, 아니면 새로운 목표가 필요한지 판단하십시오. 기존 지식과 새로운 연구 결과를 결합하여 이번 평가에 대한 계획을 세우십시오.
+
+파이썬 함수 유지
+Python 도구는 호출할 때마다 새로운 네임스페이스를 사용합니다. 헬퍼 함수를 ​​반복적으로 재구축하는 데에는 생성 비용이 발생하므로, 모델에서 정의된 함수 중 사용 가능한 함수를 저장하고 이후 도구 호출 시 복원하는 유지 메커니즘을 추가했습니다. 프롬프트에는 이러한 함수들이 모델 자체의 이전 정의라는 점이 명시적으로 표시됩니다. 다양한 유지 범위를 실험해 본 결과, 최종적으로 게임 전체에 걸쳐 정의된 함수를 유지하는 것으로 결정했습니다.
+
+이는 영구적인 파이썬 프로세스가 아닌 함수 유지 방식이라는 점에 유의하십시오. 일반 변수는 삭제되고, 제공된 게임 상태 전역 변수는 갱신됩니다. 따라서 보드별 데이터는 인수로 전달해야 합니다. 유지 실패는 방어적으로 처리됩니다. 헬퍼 함수가 손실되더라도 모델은 어떤 함수가 유지되었는지 알게 됩니다.
+
+실행 취소(UNDO) 동작 추가
+원래 Duck은 ACTION7사용 가능한 액션 목록에 해당 액션이 있으면 광고했지만, 실제로 모델이 해당 액션을 실행하도록 허용하지는 않았습니다. ARC 3 문서에서 해당 액션이 "간단한 실행 취소"라고 설명되어 있고 (데모 게임에서도 일반적으로 그렇게 작동합니다), 저는 모델이 해당 액션을 간단하게 실행할 수 있도록 UNDO하고 다른 컨트롤과 함께 간단한 시스템 안내 메시지를 추가했습니다.
+
+실행 취소 기능은 잘못된 움직임으로 퍼즐이 훨씬 어려워지거나 막힐 때 특히 유용합니다. 대부분의 데모 게임에서는 실행 취소 기능의 이점을 크게 누리지 못했습니다. 하지만 su15움직이는 물체와 블록이 서로 상호작용하는 게임에서는 실행 취소 기능의 명확한 활용 사례가 확인되었습니다. 로그를 분석한 결과, 해당 게임에서는 모델이 실행 취소 기능을 반복적으로 실행하는 것이 확인되었습니다.
+
+경쟁 데이터셋에서 되돌리기, 행동 정보, 레벨 이동 안내, 그리고 지속 기능의 조합은 상당한 성능 향상을 가져왔습니다. 이는 되돌리기 기능 단독의 기여도를 명확히 구분해낼 수는 없지만, 경쟁 데이터셋에서 이 기능이 매우 중요한 역할을 할 가능성이 높다고 생각합니다.
+
+충실한 행동 결과를 반환합니다.
+이제 기록된 각 전환은 개별 작업의 결과를 유지합니다. 별도로 last_action_call_result배치, 건너뛴 작업 및 중지 이유를 포함하여 모델이 발행한 최신 호출 전체를 설명합니다. 검사 전용 호출은 해당 정보를 보존합니다.
+
+사망과 자동 재설정은 별개의 전환입니다. 재설정은 사망을 유발한 모델 호출 결과를 덮어쓰지 않습니다. 오래된 후속 피드백에 대한 수정과 함께, 이는 모델이 코드의 실제 동작을 더욱 정확하게 반영하도록 합니다.
+
+툴 출력 용량이 약 3,072토큰으로 증가했습니다. 중간 부분 잘림 기능을 통해 긴 출력의 시작과 끝 부분을 모두 유지하여 예외 사항과 끝 부분의 보호 메시지를 보존할 수 있습니다. 액션 에코 기능을 통해 모델이 실행된 액션을 출력하는 것을 기억하는지 여부에 전적으로 의존하지 않고도 실행된 액션을 확인할 수 있습니다.
+
+5. 실패한 액션 시퀀스 중지
+예산 막대가 줄어들면 아무런 유용한 일이 일어나지 않더라도 모든 행동이 이미지에 영향을 미칠 수 있습니다. 따라서 이 시스템은 전체 보드 변경( board_changed)과 내부 보드 영역 변경( gameplay_changed)을 구분하며, 기본적으로 4칸 테두리는 제외합니다. 이 이름은 gameplay_changed이러한 제한 사항을 염두에 두고 해석해야 합니다. 즉, 기하학적 기준이지 의미론적 이해가 아닙니다. 실제 게임 요소는 테두리 근처에 존재할 수 있습니다. 시스템 안내 메시지에서 이러한 구분을 설명합니다.
+
+오픈 소스로 제출된 이 기능은 세 가지 보호 기능을 제공합니다.
+
+일괄 처리 시 동작 중지 방지: 한 작업이 내부 보드를 변경하는 데 실패하면 해당 일괄 처리의 나머지 작업을 중지합니다.
+상태 유지 방지: 비효율적인 동작 후에 동일한 코드 조각 내에서 후속 동작 호출을 차단합니다. 첫 번째 비효율적인 동작은 정상적으로 반환될 수 있으므로 모델의 코드가 예상치 못한 결과를 자체적으로 처리할 수 있습니다. 일반적으로 모델은 이러한 방식으로 처리하며, 예외를 발생시키면 이러한 조사가 차단되고 모델이 불필요하게 혼란스러워질 수 있습니다. 따라서 이 방지 장치는 비효율적인 동작 후에 다른 동작 호출이 수행될 경우에만 작동합니다.
+종료 상태 보호: 게임 오버 또는 레벨 완료 후 추가 동작이 수행될 경우 작동을 멈춥니다.
+이 구성에서 오래된 상태 가드는 레벨 2부터 시작됩니다. 배치 가드와 최종 상태 가드는 해당 임계값과 별개입니다.
+
+6. 점수 향상에 뚜렷한 도움이 되지 않은 것은 무엇인가요?
+컴퓨팅 자원이 제한적이었고, 개별 실행 결과는 상당히 다양했습니다. 가능한 경우 반복적인 데모 실행을 사용했지만, 이러한 관찰 결과는 완벽하게 통제된 절제 연구라기보다는 실제 실험 결과에 가깝습니다.
+
+구조화된 세계 모델 업데이트. 기존 구문 분석 방식은 모델이 작성한 업데이트의 형식이 예상 레이블과 다를 경우 이를 놓치는 경우가 많았습니다. 이로 인해 오래된 정보가 반복적으로 문맥에 재삽입될 수 있었습니다. 저는 더 관대한 구문 분석, 섹션 수 감소, 그리고 수정된 지침을 시도해 보았습니다. 이 부분에서 가장 큰 개선은 구조화된 세계 모델 메커니즘을 완전히 비활성화하는 데서 나타났습니다. 더 큰 규모의 순환 문맥을 사용함으로써 대화 자체에 이미 유용한 정보가 상당 부분 남아 있게 되었습니다.
+
+요약 기능. 저는 기록에 요약을 삽입하는 방식과 이전 맥락을 요약으로 대체하는 방식을 모두 시도해 보았지만, 뚜렷한 개선 효과는 없었습니다. 이는 여전히 해결해야 할 과제이지만, 오픈소스 제출물에서는 주기적인 요약 생성 기능이 사용되지 않았습니다.
+
+재개 프롬프트 및 양보 기능 개선. 프롬프트 길이 단축, 어조 변경, 일부 재삽입 제거 등의 시도에도 불구하고 일관적으로 더 나은 결과를 얻지 못했습니다. 오픈 소스 버전은 기존의 재개 프롬프트를 그대로 유지합니다. 양보는 이제 경과 시간(초)이 아닌 생성된 토큰 수(이 구성에서는 2,048개)에 따라 트리거되므로 백엔드 처리량과 무관합니다.
+
+애니메이션 이미지와 자동 타임라인 삽입 기능을 사용해 보았지만, 합성 애니메이션 이미지를 보여주는 것은 결과 개선에 도움이 되지 않았고, 이전에는 애니메이션 정보 접근이 유용했던 일부 게임에서는 오히려 역효과를 냈습니다. 타임라인을 자동으로 삽입하는 기능 또한 뚜렷한 효과를 보여주지 못했습니다. 따라서 모델이 필요할 때 참조할 수 있도록 프레임과 타임라인을 항상 제공했습니다.
+
+보다 구체적인 검증 및 추가 보호 조치가 필요합니다. 더 강력한 단계 검증 힌트는 측정 점수를 향상시키지 못했습니다. 반복 상태 보호, 기억된 무작업 또는 치명적인 동작 보호, 사망 기록 안내 기능도 검토했지만, 이 구성에 포함할 만큼 충분한 이점이 없는 것으로 나타났습니다.
+
+보다 정교한 우선순위 규칙을 적용했습니다. 속도 조정과 A와 B 모두를 정규화한 경험적 연속성 조회 방식을 사용했지만, 이전 실행에서 사용했던 상수 꼬리 정책에 비해 명확한 이점을 발견하지 못했습니다. 따라서 공개 소스 제출물에서는 위에서 설명한 간단한 잔여 수준 조회 방식을 사용하고 A만 정규화합니다.
+
+복제 및 추가 정보
+대회 용 노트북 에는 전체 하네스 패치가 포함되어 있으며 모델, 드래프트 체크포인트 및 오프라인 런타임을 구성합니다. 첨부된 입력이 활성화된 상태로 유지하고 복사할 때 RTX PRO 6000 GPU를 선택하십시오. 저장소의 기본 로컬 설정만으로는 제출 구성이 자동으로 재현되지 않습니다.
+
+로컬 사용법은 하네스 README 파일을 참조하고 , 전체 옵션 참조는 구성 가이드를 참조하십시오 . 정확한 서비스 인자와 환경 설정은 노트북에 기록되어 있습니다.
+
+감사의 글 및 참고 자료
+AI 지원. 제가 수정한 코드 대부분은 Claude와 ChatGPT를 이용해 작성했습니다. 저는 실험을 지휘하고, 변경 사항을 검토하고, 제출할 내용을 선정했습니다.
+
+개발 및 테스트에 사용된 컴퓨팅 자원입니다. 대부분의 실험은 Kaggle에서 직접 실행했습니다. 마일스톤 직전 마지막 단계에서는 추가 실험을 위해 클라우드 제공업체로부터 RTX PRO 6000 인스턴스 약 150시간 분량의 GPU 사용 시간을 임대했습니다. 이는 추론 및 테스트 컴퓨팅 자원이었으며, 모델 학습이나 미세 조정에는 사용하지 않았습니다.
+
+ARC Prize 팀 덕분에 멋진 대회를 개최할 수 있었습니다! 참가하는 동안 정말 즐거웠고, 에이전트 하네스에 대해서도 많은 것을 배웠습니다. 결승전에 진출하는 모든 분들께 행운을 빕니다! 제가 드린 아이디어들이 여러분의 솔루션을 개선하고 ARC를 한 단계 더 발전시키는 데 도움이 되기를 바랍니다. 여러분의 멋진 결과물을 기대하겠습니다!
+
+작가
+다니엘 프란젠
+드프란젠
+Skip to
+content
+
+ARC-AGI-3 Milestone 2
+ARC-AGI-3 Milestone 2
+Building on the Duck Harness — my open-source solution scoring 27.89 in the ARC-AGI-3 competition.
+
+Project Writeup · Oct 1, 2026
+
+My open-sourced notebook scored 27.89 on the public ARC-AGI-3 competition leaderboard. This write-up describes my submission and the changes I implemented.
+
+The starting point of my journey was Tufa Labs’ Duck harness, which they published for the first milestone prize in this competition. Full credit goes to Jeroen Cottaar and Tufa Labs for the original solver, harness, and notebook. Their June milestone notebook and technical write-up explain the underlying approach.
+
+I kept their core idea: a language model plays the games through a Python tool, using code to inspect the board, test mechanics, and execute actions. My work focused on making that loop more efficient under the competition’s strict hardware limits. This meant improving how much useful computation the model could do in limited time, as well as improving the information it can access to make better decisions.
+
+The source repository contains the modified harness and my SGLang builder and patches. The configuration guide documents the individual features, including experiments that were not enabled in this submission.
+
+TL;DR — the most impactful changes and findings:
+
+Better models help a lot. During the competition, I switched from Qwen3.6-27B to Qwen3.8-27B, and finally to Qwen3.8-Flash-Next. Each switch brought a substantial improvement.
+Exposing animations. Some games play animations which contain important information. Giving the model access to the intermediate frames helped it understand and solve those games.
+Improving perception. Increasing the image scale from 4× to 10×, adding difference images that highlight changed pixels, and showing the board state after game over helped the model to better understand the games.
+Adding new ways to act. Making the UNDO action available helped substantially in my competition runs.
+Preventing wasted actions. Guards stop further actions in a Python snippet after an action leaves the interior board unchanged.
+Retaining useful information and code. Larger context helped with more difficult games and levels. With the increased context, completely turning off the original text-based world model mechanism worked best in my tests. Retaining Python functions written by the model lets it reuse helpers across calls and levels, preventing unnecessary token generation.
+Maximizing token throughput. With scores still improving near the end of runs, increasing token throughput remained a promising way to improve the score. This led to testing different model quantizations and improving prefix caching.
+Re-distributing computation between games. Equal allocation spends many tokens on games that show little progress. I added a scheduler that directs more work towards games where current progress looks promising.
+In the following sections, I'll give a thorough explanation of the changes and discoveries I made during the competition.
+
+1. Model and serving
+I began my experiments with the original Duck harness using the Qwen3.6-27B model. Later, I switched to its successor Qwen3.8-27B, and then to the larger Qwen3.8-Flash-Next. Each model switch gave a substantial improvement in my experiments, and the latest switch got me to first place on the leaderboard for a short moment on September 6th, 2026, but I was quickly overtaken by Tufa Labs.
+
+Fitting Qwen3.8-Flash-Next on the RTX PRO 6000 requires offloading its large PLE embedding table to host RAM. I initially used RadixArk's NVFP4 quantization, then switched shortly before the deadline to Intel's W4A16 AutoRound quantization. In my tests, it provided similar quality and throughput, while leaving more VRAM available for the KV cache.
+
+The open-sourced submission uses a separate quantized MTP draft checkpoint from Albucino for speculative decoding. I chose to retain the main model's unquantized BF16 PLE table, as the competition machine has enough system memory to comfortably fit it. (For machines with less system RAM, Albucino’s version is an alternative with an FP8 PLE table.)
+
+Inference runs on Pennyroyal, John Pezzulli's SGLang fork, release v2.5.3 at commit d00d88e. The build used in the notebook includes a few additional patches:
+
+Low-M BF16 GEMM support, adapted from Gabriel Olympie’s patch 0004, for faster matrix multiplications at small batch sizes.
+A speculative-state memory-budget correction, adapted from the budget-accounting changes in patch 0002 in Mamy Ratsimbazafy’s repository. This avoids reserving memory for buffers that are not actually allocated.
+A Marlin scale-dtype fix, included in my build script, to resolve a BF16/FP16 mismatch when loading the quantized model.
+My prefix-cache patch, included in the same build script, described below, to retain useful Mamba checkpoints and refresh their LRU position before releasing them.
+My checkpoint-prefetch patch, also included in the build script, to read shards in the loader’s order with parallel readers and keep prefetching one shard ahead. The submission used this together with an external background prefetcher.
+The model was also resharded to make loading more practical. A single very large shard made it difficult to keep prefetching aligned with the loader's access pattern. Smaller shards and a background prefetcher made startup much more reliable. These are storage-layout changes; the model's weights remain unchanged.
+
+The important settings for the open-sourced submission were:
+
+Setting	Value
+GPU	Single RTX PRO 6000
+Parallel streams	10
+Harness context window	131,072 tokens (128 Ki)
+Maximum generated output per request	12,288 tokens (12 Ki)
+Server context limit	139,264 tokens (136 Ki)
+Configured context drain	59,392 tokens (58 Ki)
+KV-cache dtype	FP8 E4M3
+Mamba cache capacity	60 slots
+Static memory fraction	0.96
+Chunked prefill	8,192 tokens
+Speculative steps	3
+Sampling parameters	Temperature 0.7, top-p 0.95, top-k 20
+I reached Kaggle's compute limit before I could do a full demo run with the final submission configuration. I plan to run it on the demo set next week and update this write-up with the results.
+
+2. Increasing context size
+Giving the model more retained context helped especially with the more difficult games and levels, but only when the serving stack could reuse it efficiently. Otherwise, reprocessing a long history on every request would consume a large part of the available runtime.
+
+The Duck harness maintains a system prompt followed by a growing interaction history. User prompts, the model's thinking and assistant responses, as well as tool calls and outputs, are appended to that history. (Side note: the choice to retain the model's thinking output is deliberate and already present in the original harness - removing it leads to a large regression in score.) When history grows too large to fit the context limit, trimming happens at the beginning of the history (right after the system prompt). This changes the content right after the system prompt, so most of the old prefix can no longer be reused. Solving this problem required various modifications, explained in detail in the following.
+
+Estimating the actual input size
+The original character-based estimate used a fixed conversion factor between characters and tokens, and also counted serialized image data, including base64 PNG strings, as if it were text. That is a poor proxy for the actual token usage of the images.
+
+The modified harness estimates text separately and calibrates its conversion factor against usage reported by the backend. Image tokens are estimated from image dimensions and the model's patch/merge layout. This made the trimming decisions much more closely reflect the actual context budget.
+
+Limiting concurrent admission to protect the cache
+When a request finishes, it usually leaves for a tool call (which usually takes no longer than a second), and then returns to continue generation. Starting more games than the backend can keep resident in its KV cache or Mamba states creates cache pressure: a game returning would be queued, and when finally admitted, might find its prefix evicted from the KV cache by other games that took its spot in between.
+
+To prevent this, I limited admission to ten game streams, matching the server's request limit, to keep their cached prefixes resident and reusable when they return. The remaining games wait at the harness side (either by the concurrency limit, or the priority gate mechanism if priority scheduling is enabled).
+
+Retaining only useful Mamba checkpoints
+Flash-Next needs both attention KV state and the relevant recurrent-state checkpoints for prefix reuse. Having enough KV capacity alone did not guarantee a cache hit.
+
+The cache patch reduces checkpoint proliferation during prefill, which has no use in our case, as we never reduce context from the end. To reduce cache pressure, it keeps only the final prefill checkpoint, instead of filling the state cache with intermediate checkpoints. A limited branch checkpoint for a cold-start path is also retained to allow restarting from the end of the system prompt. Additionally, the end-of-prefill checkpoint's LRU position is refreshed when its decode part finishes.
+
+Keeping the end-of-prefill checkpoint matters even though a decode-end checkpoint is also created: due to re-tokenization, the tokenized conversation might not exactly match the generated token sequence from before. Retaining the final prefill checkpoint therefore guarantees a reusable state to be added to the cache.
+
+Trimming in larger blocks
+If the harness drops just enough history to fit the next request, it soon reaches the limit again. Each small trim changes the prefix and causes another expensive prefill.
+
+I added hysteresis: once the context exceeds its budget, a larger block is discarded. The history then has room to grow for many requests while its prefix remains reusable.
+
+In the open-sourced submission, the harness uses a maximum context length of 128 Ki, of which it reserves 12 Ki tokens for output. When the input approaches its limit, it trims a larger block of history, targeting roughly 57 Ki of retained context. This trades some retained history at each trim for much less repeated prefill work.
+
+Cached prefix length versus total prompt length
+
+Prefix reuse in an earlier demo run, with a slightly different config (120 Ki harness context window, 52 Ki drain, a static memory fraction of 0.955, and a constant priority tail B=5). Points near the diagonal reuse nearly the entire prompt. The low-cache cluster around 40–62k is consistent with re-prefilling after trimming in this earlier configuration; only 1 of 3,248 requests longer than 62k had fewer than 10k cached tokens. Across all 5,132 completed game requests, 93.43% of prompt tokens were reused from cache.
+
+The table below summarizes cache reuse and serving performance measured during that earlier demo run; these are not measurements of the final submission configuration (though I would expect them to be roughly similar):
+
+Metric	Earlier demo run
+Prefix caching fraction, weighted by tokens	93.43%
+P90 effective prefill throughput	10,552.6 tokens/s
+P90 aggregate decode throughput	836.6 tokens/s
+Harness-side generation throughput	609.0 tokens/s
+Prefill time fraction¹	15.25%
+Long-prompt cache miss rate²	0.03% (1/3,248)
+¹ Fraction of wall-clock time covered by initial-prefill intervals, with overlaps counted once; not exact GPU utilization.
+
+² Fraction of prompts longer than 62k tokens which have fewer than 10k cached tokens.
+
+3. Allocate computation where it can still help
+An equal time limit per game wastes computation and opportunities. Some games finish early; others use a great deal of computation without reaching the next level. Meanwhile, a game making progress may benefit from more time.
+
+To achieve this, all game sessions are now started simultaneously (instead of limiting whole-game execution to a fixed number of concurrent games), and a scheduler limits the concurrent admission to ten active games, while the other games wait in the background, with their state frozen. This mainly provides two advantages over a fixed-time budget per game:
+
+The ten available slots are kept occupied while enough unfinished games remain (except during short interruptions for tool calls). If some of the games finish early, their remaining budget is automatically redistributed to other games.
+It allows computation to be redistributed specifically towards promising games by preferring them in the scheduling algorithm.
+In the open-sourced submission, the scheduling algorithm admits a game with the highest current priority P, calculated as:
+
+
+
+
+Here, ℓ is the current level number, a is the number of actions spent on that level, and t is the number of generated tokens spent on it. N is the total number of levels reported by the game metadata, clipped to 6–10, with a fallback of 10 if unavailable or invalid.
+
+A approximates the immediate score gain from completing the current level, with an action-efficiency penalty similar to that in the official scoring formula. The factor 55 / (N(N+1)/2) accounts for games having different total level counts, using a ten-level game as the reference. This normalization applies only to A.
+
+B represents the opportunity to make further progress after completing the current level. It uses a simple lookup based on how many levels would remain after that completion:
+
+Levels remaining after the current level	B
+3 or more	8
+2	7
+1	5
+0	0
+These are heuristic continuation values, not fitted completion probabilities. They give future progress more weight early in a game and remove it entirely on the last level. B receives neither score normalization nor an additional action-efficiency multiplier; the time-based fade below still applies. C reduces priority as a level absorbs actions and generation without completion.
+
+C was calibrated from actual game progression: 725 observed level attempts from four earlier runs, including 557 completed levels and 168 unfinished levels. We measured completion rates in windows of spend among level attempts still at risk, accounting for runs ending before observation was complete. A Gaussian-shaped falloff fit those curves better than an exponential. The following images show the measured data and the adapted curves for actions and tokens:
+
+Calibration of C for actions
+Calibration of C for tokens
+
+Fade future value near the end
+Near the deadline, a level completion has less time to lead to additional completions. During the final 20% of the scheduled runtime, B is faded linearly from its lookup value towards zero:
+
+
+where r is remaining time and T is the scheduled total duration. A and C remain active. This gradually shifts emphasis toward maximizing score from finishing the current level, while still penalizing stalled games.
+
+Preserve prefix reuse while scheduling
+Allowing games to be interrupted after each tool call would undermine our prefix caching improvements. Therefore, a game normally keeps its admission slot across tool calls and resumptions. Context eviction is the natural handover point: the prefix has already changed, so this request needs substantial prefill anyway. At this point, the game re-enters the priority queue, and the freed slot is allocated to the game with the highest priority (which can also be the same game that just entered the queue). The priority-based ranking therefore operates within a policy that strongly favors retaining useful cached computation.
+
+4. Improve what the agent can observe and do
+Animations
+Some ARC games play animations during actions, which are given as intermediate animation frames between the actual board states. In some of the games, this can help the model understand the mechanics better, and others might be essentially unsolvable without reading these intermediate frames (like game tn36 from the public demo set). Of all perception changes, exposing animations to the model showed the strongest benefit in my tests.
+
+The implementation took inspiration from Jakob Brüggen's notebook. Like his implementation, the harness exposes animations in two variants: the actual animated frames returned by the game (deduplicated), and a compact timeline that describes the animated parts in textual form. Deliberately different from his implementation is how these two are exposed to the model: while his notebook just allows printing the animated frames by calling a function, here, they are directly exposed as variables in the Python REPL, so the model can inspect, compare, and compute over them (which I also observed the model doing in practice).
+
+Another inspiration taken from that notebook is when exactly to hint the model to look at the animation. While the last action's animation is always available to read in the REPL, a specific hint to investigate the animation is given only if the animation contains "transient pixels" - pixels that change more than once on the path from starting frame to the final frame, meaning they take on a state that is not visible in the ordinary game state images.
+
+Object-level changes with frame_diff
+I added a frame_diff() helper that lets the model compare two board states in Python. By default, it compares the board before and after the latest action, but it can also compare frames from history. It returns a structured description of what changed: objects that moved, rotated, appeared, disappeared, changed color, or changed size, plus the number of changed cells. Unchanged objects are omitted, keeping the output compact.
+
+This builds on the harness’s segmentation into same-color, 4-connected components. The matching is a heuristic: touching objects can merge into one component, and multiple similar objects can make correspondences ambiguous. The prompt explains these limitations so the model can use the results without treating them as guaranteed object identities.
+
+Board images
+Various changes were made regarding the images presented to the model:
+
+Game-over images. After game over, the harness now also supplies the fatal frame, rather than showing only the restarted level. That lets the model inspect what caused failure before the evidence disappears from the current view.
+
+Difference images. User prompts after performing an action include an additional difference image highlighting pixels that changed since the previous analyzer turn, which may span several actions. These images are omitted across level boundaries and when the board is unchanged. After game over, a similar difference image compares the last alive frame with the fatal frame.
+
+The biggest score improvement in terms of images actually came from changing the image upscaling to a factor of 10× (instead of the original 4×). Thanks to the changes to context length estimation, the higher token count is correctly accounted for.
+
+Significant prompt changes
+Clarifying repeated opener prompts
+
+The original harness periodically re-inserts the user prompt when the model continues reasoning or inspecting the board without taking an action. However, it can repeat the outcome of an earlier action sequence without making clear that nothing new happened. A previous game over or level completion can therefore read like a fresh event.
+
+I changed these follow-up prompts to explicitly state when no actions were executed, and to label older outcomes as reminders. This helps the model distinguish new feedback from information it has already considered, without mistaking repeated text for another change in the game.
+
+Game-over guidance
+
+After a game over, the Tufa harness just reports a short sentence in the user prompt:
+
+The game is over.
+
+That message gave the model no information about possible causes or how to continue. It was usually followed by confusion and a long analysis by the model, eventually concluding that the level was reset and it could restart it. To give the model more context, I included a detailed explanation in case of a game over.
+
+System prompt: interpreting game-over flags
+
+Flag semantics: game_over = this attempt FAILED (death or a limit ran out) — the level auto-resets to its initial state and completed levels are kept; it never means the run is won. level_completed = advanced one level. run_complete/done = the whole game is won. Deaths come either from the action itself (e.g., a hazard cell) or from a step/time budget depleting — watch for a bar at the grid border that shrinks each action, and count remaining budget into your plans.
+
+User prompt after game over: diagnosing the failure
+
+GAME OVER occurred during the previous sequence. This means the attempt FAILED (it does NOT mean the run is finished). The game has already been automatically RESET: the current level restarted from its initial state and previously completed levels are kept. A game over is caused either by the specific action taken (e.g., moving onto a hazard cell) or by a step/time budget running out, which is usually indicated by a bar at the grid border that shrinks with each action. Before acting again, diagnose the cause by inspecting the board right before the death. history[-1].action is 'RESET', history[-2].action is the fatal action, history[-2].frame is the death frame (the board after the fatal action), and history[-3].frame is the board immediately before the fatal action — check what cell the fatal move targeted there, and inspect the budget bar in the death frame. BAR RULE: the bar shrinking with each action is NORMAL — a slightly shorter bar is NOT evidence of the cause of death. The budget caused the death ONLY if the bar is fully (or almost fully) depleted in the death frame (history[-2].frame). If it IS depleted: you must reach the goal in fewer actions, or look for a way to restore the bar (e.g., collecting an item that refills it). If the bar clearly had budget remaining: the fatal action itself caused the death (hazard or forbidden move) — do NOT retry the same path; a DIFFERENT approach must be tried. Record the diagnosed cause in your world model.
+
+User prompt after game over: revising the plan
+
+Do NOT re-submit this same series of moves: the game is deterministic, so replaying the sequence that just killed you will kill you again. Change the plan BEFORE the fatal point - a different route, action, or timing. If you believe the same moves 'should' work, that belief is exactly what this death falsified; record the correction in your world model instead of retesting it.
+
+Level-transfer guidance
+
+The level-up prompt now emphasizes three ideas: mechanics from the preceding level often transfer; new elements may introduce mechanics that must be understood; and the goal may remain the same or need adapting. It also explicitly identifies the current frame as the starting state of the new level:
+
+System addition
+
+Levels usually build on mechanics learned in earlier levels, especially the most recent one. Carry forward supported knowledge as a starting hypothesis, while re-checking anything contradicted by new evidence. New levels often introduce additional mechanics, sometimes through unfamiliar board elements. These additions are often important for solving the level. The goal may remain the same but require new mechanics to reach it, or the goal itself may change.
+
+User prompt after completing a level:
+
+You have completed the previous level. current_frame now contains the starting board of the next level; any accompanying current-grid image shows this new board. Build a new plan for this layout rather than continuing the previous level's action sequence.
+
+Start from the mechanics you established on the previous level; do not rediscover them without reason. Inspect the new board for unfamiliar elements, changed arrangements, or interactions your previous understanding does not explain. New elements often introduce mechanics needed to solve this level, so prioritize small, informative tests when their behavior is unclear.
+
+Reassess the goal: does the previous objective still apply, now requiring the new mechanics, or does the evidence suggest a different objective? Combine retained knowledge with new findings to plan for this board.
+
+Retaining Python functions
+The Python tool starts each call with a fresh namespace. Rebuilding helpers repeatedly costs generation, so I added a retention mechanism which saves eligible model-defined functions and restores them in later tool calls. The prompt explicitly says they are the model's own earlier definitions. I experimented with different scopes of retention, and finally settled on retaining defined functions for the full game.
+
+Note that this is function retention rather than a persistent Python process. Ordinary variables are discarded, and provided game-state globals are refreshed. Therefore, board-specific data has to be passed as arguments. Retention failures are handled defensively: losing a helper is acceptable; the model is informed about which functions have been retained.
+
+Adding the UNDO action
+The original Duck would advertise ACTION7 in the available-action list if available without actually allowing the model to execute it. As the action is explained in the ARC 3 documentation as "simple undo action" (and this is what it generally does in the demo games), I chose to expose it to the model simply as UNDO and added a short system-prompt explanation alongside the other controls.
+
+Undo is particularly valuable when a mistaken move can make a puzzle much harder or leave it stuck. Most demo games did not benefit much. An exception was su15, where interacting moving objects and block merging provided a clear use case. Logs confirmed that the model executed undo repeatedly there.
+
+On the competition set, the combination of undo, action information, level-transfer guidance, and persistent functions produced a large improvement. While that does not isolate the contribution of undo alone, I still suspect that this might be a very important mechanic on the competition set.
+
+Return faithful action results
+Each recorded transition now retains the result of its individual action. Separately, last_action_call_result describes the entire latest model-issued call, including batches, skipped actions, and stop reasons. Inspection-only calls preserve that information.
+
+Death and automatic reset are separate transitions. The reset does not overwrite the result of the model call that caused death. Together with corrections to stale follow-up feedback, this gives the model a more faithful account of what its code actually did.
+
+Tool output was increased to an approximate 3,072-token budget. Middle truncation retains both the beginning and end of long output, helping preserve exceptions and guard messages near the end. Action echo makes executed actions visible without depending entirely on the model remembering to print them.
+
+5. Stopping failed action sequences
+A shrinking budget bar can make every action change the image, even if nothing useful happened. The harness therefore distinguishes whole-board changes (board_changed) from changes in the interior board area (gameplay_changed), excluding a four-cell border by default. The name gameplay_changed should be read with that limitation: it is a geometric test, not semantic understanding. Genuine game elements can exist near the border. The system prompt explains the distinction.
+
+The open-sourced submission enables three guards:
+
+Batch no-op guard: stop the remaining actions in a batch after an action fails to change the interior board.
+Stale-state guard: after an ineffective action, block a later action call in the same snippet. The first ineffective action can return normally, allowing the model's written code to handle the unexpected outcome by itself, which it usually does, and where firing an exception would potentially block such investigation and confuse the model unnecessarily. Therefore, the guard fires only if another action call is performed after the ineffective action.
+Terminal-state guard: stops if a further action is performed after either a game over or level completion.
+The stale-state guard starts from level 2 in this configuration. The batch guard and terminal-state guard are separate from that threshold.
+
+6. What did not clearly improve the score
+Compute was limited, and individual runs varied considerably. I used repeated demo runs where feasible, but these observations are practical experiment results rather than a complete controlled ablation study.
+
+Structured world-model updates. The original parsing often missed model-written updates when their formatting differed from the expected labels. That could leave stale information repeatedly reinserted into context. I tried more tolerant parsing, fewer sections, and revised instructions. The largest improvement in this area came from disabling the structured world-model mechanism entirely. With a larger rolling context, the conversation itself already retained much of the useful evidence.
+
+Summarization. I tried summaries inserted into the history and summaries replacing preceding context. Neither gave a clear improvement. This remains an open question, but periodic summary generation was not used in the open-sourced submission.
+
+Resume prompts and yielding. Shorter prompts, different tones, and removing some reinsertion did not produce a consistently better result. The open-sourced submission retains the ordinary resume prompt. Yielding is now triggered by generated tokens (2,048 in this configuration) rather than elapsed seconds, making it independent of backend throughput.
+
+Animation images and automatic timeline insertion. Showing composite animation images did not improve results and hurt some games where access to animation information had previously helped. Automatically inserting the timeline also showed no clear gain. I kept frames and timelines available for the model to inspect when useful.
+
+More prescriptive verification and additional guards. A stronger step-verification hint did not improve the measured score. Repeated-state guards, remembered no-op or fatal-action guards, and death-ledger guidance were also explored without sufficiently clear benefit to include in this configuration.
+
+More elaborate priority rules. Pace adjustment and an empirical continuation lookup with normalization of both A and B did not establish a clear advantage over the constant-tail policy used in earlier runs. The open-sourced submission instead uses the simple remaining-level lookup described above and normalizes only A.
+
+Reproduction and further details
+The competition notebook contains the complete harness patch and configures the model, draft checkpoint, and offline runtime. Keep its attached inputs enabled and select the RTX PRO 6000 GPU when copying it. The repository's inherited local defaults do not reproduce the submission configuration on their own.
+
+See the harness README for local usage and the configuration guide for the complete option reference. Exact serving arguments and environment settings are recorded in the notebook.
+
+Acknowledgements and resources
+AI assistance. Most of the code for my modifications was written with Claude and ChatGPT. I directed the experiments, reviewed the changes, and selected what went into the submissions.
+
+Compute used for development and testing. I ran most of my experiments directly on Kaggle. During the final phase before the milestone, I also rented approximately 150 GPU-hours on single RTX PRO 6000 instances from cloud providers to run additional experiments. This was inference and testing compute; I did not train or fine-tune the models.
+
+Thanks to the ARC Prize team for organizing this great competition! I had a lot of fun participating, and I learned a lot about agent harnesses along the way. Good luck to everyone heading into the final part of the competition! I hope some of the ideas here help you improve your own solutions and move us a little further along on ARC. I’m looking forward to seeing what you come up with!
+
+Author
+Daniel Franzen
+dfranzen
+
+
+Share
+
+
+공유하다
